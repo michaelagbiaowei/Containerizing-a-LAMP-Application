@@ -1,57 +1,58 @@
-# For more information: https://laravel.com/docs/sail
-version: '3.9'
+version: '3'
 
 services:
-    laravel.test:
+    apache2_webserver: 
+            image: ubuntu/apache2:latest
+            container_name: ${APP_NAME}_apache2_webserver
+            ports:
+                - "${HOST_MACHINE_UNSECURE_HOST_PORT}:80"
+                - "${HOST_MACHINE_SECURE_HOST_PORT}:443"
+            links:
+                - php
+            volumes:
+                - '.:/var/www/html'
+                - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
+                - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
+                - ${LOG_DIR-./logs/apache2}:/var/log/apache2
+                - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
+            environment:
+                APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT-/var/www/html}
+                DB_CONNECTION: ${DB_CONNECTION}
+                DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+                DB_USER: ${DB_USER}
+                DB_PASSWORD: ${DB_PASSWORD}
+                DB_DATABASE: ${DB_DATABASE}
+                DB_PORT: ${DB_PORT}
+                XDEBUG_CONFIG: "client_host=host.docker.internal remote_port=${XDEBUG_PORT}"
+            extra_hosts:
+                - "host.docker.internal:host-gateway"
+            depends_on:
+                - php
+                - database
+            network:
+                - webserver
+
+    php:
         build:
-            context: ./vendor/laravel/sail/runtimes/8.1
-            dockerfile: Dockerfile
-            args:
-                WWWGROUP: '${WWWGROUP}'
-        image: sail-8.1/app
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-80}:80'
-            - '${HMR_PORT:-8080}:8080'
-        environment:
-            PHP_IDE_CONFIG: 'serverName=laravel-realworld.test'
-            WWWUSER: '${WWWUSER}'
-            LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
+        context: ./docker-scripts
+        dockerfile: Dockerfile
+        args:
+           user: "${WWWGROUP}"
+           uid: "${USER_ID}"
+        container_name: ${APP_NAME}_php
         volumes:
-            - '.:/var/www/html'
+            - ./:/var/www/html
+        ports:
+            - "${HOST_PHP_PORT}:9000"
         networks:
-            - sail
+            - webserver
         depends_on:
-            - pgsql
+            - apache2_webserver
+        link:
+            - apache2_webserver
+            - database
 
-    pgsql:
-        image: 'postgres:14-alpine'
-        ports:
-            - '${FORWARD_DB_PORT:-5432}:5432'
-        environment:
-            PGPASSWORD: '${DB_PASSWORD:-secret}'
-            POSTGRES_DB: '${DB_DATABASE}'
-            POSTGRES_USER: '${DB_USERNAME}'
-            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
-        volumes:
-            - 'sail-pgsql:/var/lib/postgresql/data'
-            - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
-        networks:
-            - sail
-        healthcheck:
-            test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}" ]
-            retries: 3
-            timeout: 5s
-
-networks:
-    sail:
-        name: laravel-realworld-network
-        driver: bridge
-
-volumes:
-    sail-pgsql:
-        name: laravel-realworld-database
-        driver: local
+    database: 
+        image: mysql
+        container_name: "${APP_NAME}_database"
+            
