@@ -19,9 +19,9 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:
-            - '.:/var/www/html'
+            - .:/var/www/
             - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
-            - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
+            - ${VHOSTS_DIR-./config/vhosts/default.conf}:/etc/apache2/sites-enabled
             - ${LOG_DIR-./logs/apache2}:/var/log/apache2
             - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
         networks:
@@ -29,6 +29,9 @@ services:
 
     php:
         build:
+            args:
+                user: "${USER}"
+                uid: "{USER_ID}"
             context: ./docker
             dockerfile: Dockerfile
         image: php:8.1.0-fpm
@@ -36,8 +39,8 @@ services:
         restart: unless-stopped
         tty: true
         environment:
-            SERVICE_NAME: app
-            SERVICE_TAGS: dev
+            SERVICE_NAME: php
+            SERVICE_TAGS: cloud
         ports:
             - "${HOST_PHP_PORT}:9000"
         working_dir: "${APACHE_DOCUMENT_ROOT}"
