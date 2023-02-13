@@ -27,20 +27,35 @@ services:
 
     php:
         build:
-            args:
-                user: "${USER}"
-                uid: "${USER_ID}"
             context: ./docker
             dockerfile: Dockerfile
+        image: digitalocean.com/php
         container_name: "${APP_NAME}_php"
-        volumes:
-            - ./:/var/www/html
-        ports:
-            - "${HOST_PHP_PORT}:9000"
+        restart: unless-stopped
+        tty: true
+        environment:
+            SERVICE_NAME: app
+            SERVICE_TAGS: dev
+        working_dir: /var/www/html
         networks:
             - webserver
-        links:
-            - apache
+        ports:
+            - "${HOST_PHP_PORT}:9000"
+    # php:
+    #     build:
+    #         args:
+    #             user: "${USER}"
+    #             uid: "${USER_ID}"
+    #         context: ./docker
+    #         dockerfile: Dockerfile
+    #     container_name: "${APP_NAME}_php"
+    #     volumes:
+    #         - ./:/var/www/html
+
+    #     networks:
+    #         - webserver
+    #     links:
+    #         - apache
 
     database: 
         image: mysql
@@ -49,8 +64,8 @@ services:
         ports:
             - "127.0.0.1:${DB_PORT}:3306"
         volumes:
-            - ./docker/mysql:/var/lib/mysql/data
-            - ./docker/mysqldb/mysql.cnf:/etc/mysql/mysql.cnf
+            - dbdata:/var/lib/mysql/
+            - ./mysql/my.cnf:/etc/mysql/my.cnf
         environment:
             MYSQL_CONNECTION: ${DB_CONNECTION}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
