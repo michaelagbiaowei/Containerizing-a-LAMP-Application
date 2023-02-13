@@ -7,12 +7,6 @@ services:
         ports:
             - "${HOST_MACHINE_UNSECURE_HOST_PORT}:80"
             - "${HOST_MACHINE_SECURE_HOST_PORT}:443"
-        volumes:
-            - '.:/var/www/html'
-            - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
-            - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
-            - ${LOG_DIR-./logs/apache2}:/var/log/apache2
-            - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
         environment:
             APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT-/var/www/html}
             MYSQL_CONNECTION: ${DB_CONNECTION}
@@ -24,38 +18,34 @@ services:
             XDEBUG_CONFIG: "client_host=host.docker.internal remote_port=${XDEBUG_PORT}"
         extra_hosts:
             - "host.docker.internal:host-gateway"
+        volumes:
+            - '.:/var/www/html'
+            - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
+            - ${VHOSTS_DIR-./config/vhosts}:/etc/apache2/sites-enabled
+            - ${LOG_DIR-./logs/apache2}:/var/log/apache2
+            - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
+        networks:
+            - webserver
 
     php:
         build:
             context: ./docker
             dockerfile: Dockerfile
-        image: digitalocean.com/php
+        image: php:8.1.0-fpm
         container_name: "${APP_NAME}_php"
         restart: unless-stopped
         tty: true
         environment:
             SERVICE_NAME: app
             SERVICE_TAGS: dev
-        working_dir: /var/www/html
-        networks:
-            - webserver
         ports:
             - "${HOST_PHP_PORT}:9000"
-    # php:
-    #     build:
-    #         args:
-    #             user: "${USER}"
-    #             uid: "${USER_ID}"
-    #         context: ./docker
-    #         dockerfile: Dockerfile
-    #     container_name: "${APP_NAME}_php"
-    #     volumes:
-    #         - ./:/var/www/html
-
-    #     networks:
-    #         - webserver
-    #     links:
-    #         - apache
+        working_dir: "${APACHE_DOCUMENT_ROOT}"
+        networks:
+            - webserver
+        volumes:
+            - ./:/var/www
+            - ${MYPHP_VOLUME}:/usr/local/etc/php/conf.d/local.ini
 
     database: 
         image: mysql
@@ -63,30 +53,24 @@ services:
         restart: "always"
         ports:
             - "127.0.0.1:${DB_PORT}:3306"
-        volumes:
-            - dbdata:/var/lib/mysql/
-            - ./mysql/my.cnf:/etc/mysql/my.cnf
         environment:
             MYSQL_CONNECTION: ${DB_CONNECTION}
             MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
             MYSQL_DATABASE: ${DB_DATABASE}
             MYSQL_USER: ${DB_USERNAME}
             MYSQL_PASSWORD: ${DB_PASSWORD}
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - dbdata:/var/lib/mysql/
+            - ${MYSQL_CNF}:/etc/mysql/my.cnf
         networks:
             - webserver
-
-    redis:
-        container_name: "${APP_NAME}-redis"
-        image: redis:latest
-        ports:
-        - "127.0.0.1:${REDIS_PORT}:6379"
-        links:
-            - database
 
 networks:
   webserver:
     driver: bridge
 
 volumes:
-  docker:
+  dbdata:
     driver: local
