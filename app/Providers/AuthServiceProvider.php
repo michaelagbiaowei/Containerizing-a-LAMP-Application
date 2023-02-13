@@ -2,10 +2,8 @@
 
 namespace App\Providers;
 
-use App\Auth\JwtGuard;
+// use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Auth;
-use InvalidArgumentException;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -27,14 +25,6 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Auth::extend('jwt', function ($app, $name, array $config) {
-            $provider = Auth::createUserProvider($config['provider'] ?? null);
-
-            if ($provider === null) {
-                throw new InvalidArgumentException('Invalid UserProvider config specified.');
-            }
-
-            return new JwtGuard($provider, $app['request'], $config['input_key'] ?? 'token');
-        });
+        //
     }
 }
