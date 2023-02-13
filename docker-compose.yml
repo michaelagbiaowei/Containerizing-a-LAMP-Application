@@ -34,7 +34,7 @@ services:
 
     php:
         build:
-        context: ./docker-scripts
+        context: docker
         dockerfile: Dockerfile
         args:
            user: "${WWWGROUP}"
@@ -55,4 +55,43 @@ services:
     database: 
         image: mysql
         container_name: "${APP_NAME}_database"
-            
+        restart: "always"
+        ports:
+            - "127.0.0.1:${DB_PORT}:3306"
+        volumes:
+            - docker/mysql:/var/lib/mysql/
+            - ./mysql/mysql.cnf:/etc/mysql/mysql.cnf
+        environment:
+            DB_CONNECTION: ${DB_CONNECTION}
+            DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            DB_DATABASE: ${DB_DATABASE}
+            DB_USER: ${DB_USER}
+            DB_PASSWORD: ${DB_PASSWORD}
+        depends_on:
+            - php
+        link:
+            - php
+        networks:
+            - webserver
+
+    redis:
+    container_name: "${APP_NAME}-redis"
+    image: redis:latest
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+    depends_on:
+        - apache2_webserver
+        - php
+        - database
+    link:
+        - database
+    network:
+        - webserver
+
+networks:
+  webserver:
+    driver: bridge
+
+volumes:
+  docker:
+    driver: local
