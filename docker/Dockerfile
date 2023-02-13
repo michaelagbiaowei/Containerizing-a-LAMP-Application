@@ -1,5 +1,8 @@
 FROM php:8.1.0-fpm
 
+ARG user
+ARG uid
+
 # Set working directory
 WORKDIR /var/www
 
