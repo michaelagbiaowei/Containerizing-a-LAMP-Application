@@ -69,4 +69,4 @@ networks:
 
 volumes:
   dbdata:
-    driver: l${VOLUME_DRIVER}
+    driver: ${VOLUME_DRIVER}
