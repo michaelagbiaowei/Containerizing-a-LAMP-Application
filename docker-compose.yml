@@ -19,7 +19,7 @@ services:
             - ${LOG_DIR-./logs/apache2}:/var/log/apache2
             - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
         networks:
-            - "${NETWORK}"
+            - "webserver"
 
     php:
         build:
@@ -39,7 +39,7 @@ services:
             - "${HOST_PHP_PORT}:9000"
         working_dir: "${APACHE_DOCUMENT_ROOT}"
         networks:
-            - "${NETWORK}"
+            - "webserver"
         volumes:
             - ./:/var/www/html
 
@@ -58,15 +58,15 @@ services:
             SERVICE_TAGS: dev
             SERVICE_NAME: mysql
         volumes:
-            - ${DB_VOLUME}:/var/lib/mysql/
+            - dbdata:/var/lib/mysql/
             - ${MYSQL_VOLUME}:/etc/mysql/mysql.cnf
         networks:
-            - ${NETWORK}
+            - webserver
 
 networks:
-  "${NETWORK}":
+  webserver:
     driver: ${NETWORK_DRIVER}
 
 volumes:
-  "${DB_VOLUME}":
+  dbdata:
     driver: l${VOLUME_DRIVER}
