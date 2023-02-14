@@ -1,4 +1,4 @@
-FROM php:8.1.0-fpm
+FROM php:8.2
 
 ARG user
 ARG uid
@@ -8,6 +8,7 @@ WORKDIR /var/www
 
 # Install dependencies
 RUN apt update && apt install -y \
+    git \
     build-essential \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -37,9 +38,6 @@ RUN docker-php-ext-install gd
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Add user for laravel application
-# RUN groupadd -g 1000 www
-# RUN useradd -u 1000 -ms /bin/bash -g www www
 RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
