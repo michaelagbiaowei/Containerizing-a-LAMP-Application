@@ -9,12 +9,6 @@ services:
             - "${HOST_MACHINE_SECURE_HOST_PORT}:443"
         environment:
             APACHE_DOCUMENT_ROOT: ${APACHE_DOCUMENT_ROOT-/var/www/html}
-            MYSQL_CONNECTION: ${DB_CONNECTION}
-            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-            MYSQL_USER: ${DB_USERNAME}
-            MYSQL_PASSWORD: ${DB_PASSWORD}
-            MYSQL_DATABASE: ${DB_DATABASE}
-            MYSQL_PORT: ${DB_PORT}
             XDEBUG_CONFIG: "client_host=host.docker.internal remote_port=${XDEBUG_PORT}"
         extra_hosts:
             - "host.docker.internal:host-gateway"
@@ -25,7 +19,7 @@ services:
             - ${LOG_DIR-./logs/apache2}:/var/log/apache2
             - ${XDEBUG_LOG_DIR-./logs/xdebug}:/var/log/xdebug
         networks:
-            - webserver
+            - "${NETWORK}"
 
     php:
         build:
@@ -34,7 +28,7 @@ services:
                 uid: "{USER_ID}"
             context: ./docker
             dockerfile: Dockerfile
-        image: php:8.1.0-fpm
+        image: php:8.2
         container_name: "${APP_NAME}_php"
         restart: unless-stopped
         tty: true
@@ -45,7 +39,7 @@ services:
             - "${HOST_PHP_PORT}:9000"
         working_dir: "${APACHE_DOCUMENT_ROOT}"
         networks:
-            - webserver
+            - "${NETWORK}"
         volumes:
             - ./:/var/www
             - ${MYPHP_VOLUME}:/usr/local/etc/php/conf.d/local.ini
@@ -65,15 +59,15 @@ services:
             SERVICE_TAGS: dev
             SERVICE_NAME: mysql
         volumes:
-            - dbdata:/var/lib/mysql/
-            - ${MYSQL_CNF}:/etc/mysql/my.cnf
+            - ${DB_VOLUME}:/var/lib/mysql/
+            - ${MYSQL_VOLUME}:/etc/mysql/mysql.cnf
         networks:
-            - webserver
+            - ${NETWORK}
 
 networks:
-  webserver:
-    driver: bridge
+  "${NETWORK}":
+    driver: ${NETWORK_DRIVER}
 
 volumes:
-  dbdata:
-    driver: local
+  "${DB_VOLUME}":
+    driver: l${VOLUME_DRIVER}
