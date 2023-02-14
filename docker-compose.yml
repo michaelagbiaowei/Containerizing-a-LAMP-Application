@@ -13,7 +13,7 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:
-            - .:/var/www/
+            - .:/var/www/html
             - ${PHP_INI-./config/php/php.ini}:/usr/local/etc/php/php.ini
             - ${VHOSTS_DIR-./config/vhosts/default.conf}:/etc/apache2/sites-enabled
             - ${LOG_DIR-./logs/apache2}:/var/log/apache2
@@ -41,8 +41,7 @@ services:
         networks:
             - "${NETWORK}"
         volumes:
-            - ./:/var/www
-            - ${MYPHP_VOLUME}:/usr/local/etc/php/conf.d/local.ini
+            - ./:/var/www/html
 
     database: 
         image: mysql
