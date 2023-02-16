@@ -1,4 +1,4 @@
-FROM php
+FROM php:8.2
 
 ARG user
 ARG uid
@@ -9,7 +9,6 @@ WORKDIR /var/www/html
 # Install Laravel framework system requirements (https://laravel.com/docs/8.x/deployment#optimizing-configuration-loading)
 RUN apk add oniguruma-dev libxml2-dev
 RUN apt update && apt install -y \
-    git \
     build-essential \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -36,7 +35,7 @@ RUN docker-php-ext-install gd  oniguruma-dev
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install composer
+# # # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
@@ -44,8 +43,7 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
-
-# Change current user to user
+# Change current user to www
 USER $user
 
 # Copy existing application directory contents
@@ -55,14 +53,14 @@ COPY . /var/www/html
 # COPY --chown=www:www . /var/www
 
 # Optimizing Configuration loading
-RUN php artisan config:cache
+#RUN php artisan config:cache
 # Optimizing Route loading
-RUN php artisan route:cache
+#RUN php artisan route:cache
 # Optimizing View loading
-RUN php artisan view:cache
+#RUN php artisan view:cache
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 8000
 
-CMD ["php artisan serve"]
+RUN php artisan serve
 # CMD ["php-fpm"]

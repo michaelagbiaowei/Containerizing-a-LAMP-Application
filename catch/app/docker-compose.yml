@@ -24,11 +24,11 @@ services:
     php:
         build:
             args:
-                user: "${USER}"
-                uid: "{USER_ID}"
+                user: user
+                uid: 1000
             context: ./docker
             dockerfile: Dockerfile
-        image: php
+        image: php:8.2
         container_name: "${APP_NAME}_php"
         restart: unless-stopped
         tty: true
