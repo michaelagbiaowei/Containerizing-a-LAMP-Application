@@ -8,7 +8,7 @@ services:
                 uid: "${USER_ID}"
             context: ./docker
             dockerfile: Dockerfile
-        image: php:8.2.1-fpm
+        image: php:{PHP_VERSION}
         container_name: "${APP_NAME}_php"
         restart: unless-stopped
         tty: true
