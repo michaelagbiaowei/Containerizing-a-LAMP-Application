@@ -1,1 +1,2 @@
 127.0.0.1:80 172.18.0.1 - - [18/Feb/2023:14:40:18 +0000] "GET / HTTP/1.1" 200 2047 "https://us-east-1.console.aws.amazon.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.49"
+127.0.0.1:80 172.19.0.1 - - [21/Feb/2023:16:18:52 +0000] "GET / HTTP/1.1" 200 1915 "-" "curl/7.68.0"

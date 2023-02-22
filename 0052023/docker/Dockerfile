@@ -24,6 +24,10 @@ RUN apt update && apt install -y \
 
 RUN docker-php-ext-install pdo_mysql zip exif pcntl bcmath gd
 
+RUN pecl install -o -f redis \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-enable redis
+
 COPY --from=composer:2.3.5 /usr/bin/composer /usr/bin/composer
 # Clear cache
 RUN apt clean && rm -rf /var/lib/apt/lists/*
@@ -50,4 +54,4 @@ COPY . /var/www/html
 
 # Expose port 8000 and start php server
 EXPOSE 8000
-ENTRYPOINT [ "docker/entry.sh" ]
+# ENTRYPOINT [ "docker/entrypoint.sh" ]
